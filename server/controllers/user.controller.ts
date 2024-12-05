@@ -84,5 +84,73 @@ export const createActivationToken = (user: any): IActivationToken => {
   return { token, activationCode };
 };
 
-
 //activate user
+interface IActivationRequest {
+  activation_token: string;
+  activation_code: string;
+}
+
+export const activateUser = CatchAsyncError(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { activation_token, activation_code } =
+        req.body as IActivationRequest;
+
+      const newUser: { user: IUser; activationCode: string } = jwt.verify(
+        activation_token,
+        process.env.ACTIVATION_SECRET as string
+      ) as { user: IUser; activationCode: string };
+
+      if (newUser.activationCode !== activation_code) {
+        return next(new ErrorHandler("Invalid activation code", 400));
+      }
+
+      const { name, email, password } = newUser.user;
+
+      const existUser = await userModel.findOne({ email });
+
+      const user = await userModel.create({
+        name,
+        email,
+        password,
+      });
+
+      res.status(201).json({
+        success: true,
+      });
+    } catch (error: any) {
+      return next(new ErrorHandler(error.message, 400));
+    }
+  }
+);
+
+//LOGIN USER
+interface ILoginRequest {
+  email: string;
+  password: string;
+}
+
+export const loginUser = CatchAsyncError(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { email, password } = req.body as ILoginRequest;
+
+      if (!email || !password) {
+        return next(new ErrorHandler("Please enter email and password", 400));
+      }
+
+      const user = await userModel.findOne({ email }).select("+password");
+
+      if (!user) {
+        return next(new ErrorHandler("Invalid email or password", 400));
+      }
+
+      const isPasswordMatch = await user.comparePassword(password);
+      if (!isPasswordMatch) {
+        return next(new ErrorHandler("Invalid email or password", 400));
+      }
+    } catch (error: any) {
+      return next(new ErrorHandler(error.message, 400));
+    }
+  }
+);
