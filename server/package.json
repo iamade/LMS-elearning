@@ -4,8 +4,8 @@
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "devold": "nodemon server.ts",
-    "dev": "ts-node-dev --respawn --transpile-only server.ts"
+    "devols": "ts-node-dev --respawn --transpile-only server.ts",
+    "dev": "ts-node-dev --transpile-only server.ts"
   },
   "author": "Adesegun Koiki",
   "license": "ISC",
